@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Leader Cards</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Sarabun:wght@300;400;600;700&display=swap');
+
+  :root {
+    --gold: #f0c040;
+    --dark: #080810;
+    --panel: #10101c;
+    --panel2: #16162a;
+    --border: #252540;
+    --text: #e8e0d0;
+    --muted: #666688;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    padding: 1.5rem 1rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(240,192,64,0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(1rem, 4vw, 1.8rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(240,192,64,0.35);
+  }
+  header p { color: var(--muted); font-size: 0.8rem; margin-top: 0.3rem; }
+
+  .trainer-row {
+    display: flex; gap: 0.4rem; padding: 0.8rem;
+    overflow-x: auto; scrollbar-width: none;
+    flex-wrap: wrap; justify-content: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .trainer-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0.4rem 0.8rem; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--panel);
+    cursor: pointer; font-family: 'Sarabun', sans-serif;
+    font-size: 0.78rem; color: var(--muted); transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .trainer-btn:hover { border-color: var(--gold); color: var(--text); }
+  .trainer-btn.active { border-color: var(--gold); background: rgba(240,192,64,0.1); color: var(--gold); }
+  .trainer-btn .cnt { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 8px; font-size: 0.65rem; }
+
+  .set-row {
+    display: flex; gap: 0.5rem; padding: 0.6rem 0.8rem;
+    justify-content: center; border-bottom: 1px solid var(--border);
+  }
+  .set-btn {
+    padding: 0.25rem 0.9rem; border-radius: 14px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); cursor: pointer; font-family: 'Sarabun', sans-serif;
+    font-size: 0.75rem; transition: all 0.15s;
+  }
+  .set-btn.active, .set-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(240,192,64,0.07); }
+
+  .main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+
+  .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+  .bar-title { font-family: 'Cinzel Decorative', cursive; font-size: 0.75rem; color: var(--gold); }
+  .bar-count { font-size: 0.7rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); padding: 2px 10px; border-radius: 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.7rem; }
+
+  .card-item {
+    border-radius: 10px; overflow: hidden;
+    border: 1.5px solid var(--border); background: var(--panel2);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .card-item:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+
+  .card-img-box {
+    width: 100%; aspect-ratio: 2.5/3.5; background: #0c0c18;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
+  .placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); font-size: 0.6rem; text-align: center; padding: 0.4rem; }
+  .placeholder .ball { font-size: 1.6rem; opacity: 0.2; }
+  .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 0.6rem; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .card-label { padding: 0.35rem 0.45rem; }
+  .card-label .pname { font-size: 0.68rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-label .pmeta { display: flex; justify-content: space-between; margin-top: 2px; }
+  .card-label .pset { font-size: 0.58rem; color: var(--muted); }
+  .card-label .pnum { font-size: 0.58rem; color: var(--gold); opacity: 0.7; }
+
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88); z-index: 200;
+    align-items: center; justify-content: center;
+    padding: 1rem; backdrop-filter: blur(6px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--panel2); border: 1.5px solid var(--gold);
+    border-radius: 16px; max-width: 340px; width: 100%;
+    overflow: hidden; animation: pop 0.2s ease; position: relative;
+  }
+  @keyframes pop { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
+  .modal-close {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.6); border: 1px solid var(--border);
+    color: var(--text); width: 28px; height: 28px;
+    border-radius: 50%; cursor: pointer; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; z-index: 1;
+  }
+  .modal-img-box {
+    width: 100%; aspect-ratio: 2.5/3.5; background: #08080f;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .modal-img-box img { width: 100%; height: 100%; object-fit: contain; }
+  .modal-body { padding: 0.8rem; }
+  .modal-body h3 { font-size: 0.95rem; color: var(--gold); font-weight: 700; }
+  .modal-body .mmeta { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+  .modal-body .sinfo { margin-top: 0.5rem; font-size: 0.65rem; color: var(--muted); background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px; }
+
+  .empty { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚔️ GYM LEADER CARDS</h1>
+  <p>Gym Heroes &amp; Gym Challenge · คลิกการ์ดเพื่อดูรูปใหญ่</p>
+</header>
+
+<div class="trainer-row" id="trainerRow"></div>
+<div class="set-row" id="setRow">
+  <button class="set-btn active" data-set="all">ทั้งหมด</button>
+  <button class="set-btn" data-set="GH">Gym Heroes</button>
+  <button class="set-btn" data-set="GC">Gym Challenge</button>
+</div>
+
+<div class="main">
+  <div class="bar">
+    <span class="bar-title" id="barTitle"></span>
+    <span class="bar-count" id="barCount">0 ใบ</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">เลือกเทรนเนอร์ด้านบนครับ 👆</div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-img-box" id="modalImgBox">
+      <div class="spinner-wrap"><div class="spinner"></div><span>กำลังโหลด...</span></div>
+    </div>
+    <div class="modal-body">
+      <h3 id="modalName"></h3>
+      <div class="mmeta" id="modalMeta"></div>
+      <div class="sinfo" id="sinfo">🔍 ค้นหารูปจาก AI...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TRAINERS = [
+  {id:'sabrina',name:'Sabrina',jp:'ナツメ',icon:'🔮'},
+  {id:'brock',name:'Brock',jp:'タケシ',icon:'🪨'},
+  {id:'misty',name:'Misty',jp:'カスミ',icon:'💧'},
+  {id:'surge',name:'Lt.Surge',jp:'マチス',icon:'⚡'},
+  {id:'erika',name:'Erika',jp:'エリカ',icon:'🌿'},
+  {id:'koga',name:'Koga',jp:'キョウ',icon:'☠️'},
+  {id:'blaine',name:'Blaine',jp:'カツラ',icon:'🔥'},
+  {id:'giovanni',name:'Giovanni',jp:'サカキ',icon:'👊'},
+  {id:'rocket',name:'Rocket',jp:'ロケット団',icon:'🚀'},
+];
+
+const CARDS = {
+  sabrina:[
+    ["Sabrina's Gengar","GH","014"],["Sabrina's Venomoth","GH","034"],
+    ["Sabrina's Haunter","GH","058"],["Sabrina's Jynx","GH","059"],
+    ["Sabrina's Slowbro","GH","060"],["Sabrina's Abra","GH","091"],
+    ["Sabrina's Drowzee","GH","092"],["Sabrina's Gastly","GH","093"],
+    ["Sabrina's Mr. Mime","GH","094"],["Sabrina's Slowpoke","GH","095"],
+    ["Sabrina's Venonat","GH","096"],
+    ["Sabrina's Alakazam","GC","016"],["Sabrina's Gengar","GC","029"],
+    ["Sabrina's Golduck","GC","030"],["Sabrina's Haunter","GC","055"],
+    ["Sabrina's Hypno","GC","056"],["Sabrina's Jynx","GC","057"],
+    ["Sabrina's Kadabra","GC","058"],["Sabrina's Mr. Mime","GC","059"],
+    ["Sabrina's Abra","GC","093"],["Sabrina's Abra","GC","094"],
+    ["Sabrina's Drowzee","GC","095"],["Sabrina's Gastly","GC","096"],
+    ["Sabrina's Gastly","GC","097"],["Sabrina's Porygon","GC","098"],
+    ["Sabrina's Psyduck","GC","099"],
+  ],
+  brock:[
+    ["Brock's Rhydon","GH","002"],["Brock's Golem","GH","020"],
+    ["Brock's Onix","GH","021"],["Brock's Rhyhorn","GH","022"],
+    ["Brock's Sandslash","GH","023"],["Brock's Zubat","GH","024"],
+    ["Brock's Geodude","GH","038"],["Brock's Golbat","GH","039"],
+    ["Brock's Graveler","GH","040"],["Brock's Lickitung","GH","041"],
+    ["Brock's Geodude","GH","066"],["Brock's Mankey","GH","067"],
+    ["Brock's Mankey","GH","068"],["Brock's Onix","GH","069"],
+    ["Brock's Rhyhorn","GH","070"],["Brock's Sandshrew","GH","071"],
+    ["Brock's Sandshrew","GH","072"],["Brock's Vulpix","GH","073"],
+    ["Brock's Zubat","GH","074"],
+    ["Brock's Ninetales","GC","003"],["Brock's Dugtrio","GC","022"],
+    ["Brock's Graveler","GC","034"],["Brock's Primeape","GC","035"],
+    ["Brock's Sandslash","GC","036"],["Brock's Vulpix","GC","037"],
+    ["Brock's Diglett","GC","064"],["Brock's Mankey","GC","066"],
+    ["Brock's Onix","GC","067"],["Brock's Rhyhorn","GC","068"],
+    ["Brock's Sandshrew","GC","069"],["Brock's Zubat","GC","070"],
+  ],
+  misty:[
+    ["Misty's Seadra","GH","009"],["Misty's Tentacruel","GH","010"],
+    ["Misty's Cloyster","GH","029"],["Misty's Goldeen","GH","030"],
+    ["Misty's Poliwrath","GH","031"],["Misty's Tentacool","GH","032"],
+    ["Misty's Poliwhirl","GH","053"],["Misty's Psyduck","GH","054"],
+    ["Misty's Seaking","GH","055"],["Misty's Starmie","GH","056"],
+    ["Misty's Tentacool","GH","057"],["Misty's Goldeen","GH","085"],
+    ["Misty's Horsea","GH","086"],["Misty's Poliwag","GH","087"],
+    ["Misty's Shellder","GH","088"],["Misty's Staryu","GH","089"],
+    ["Misty's Tentacool","GH","090"],
+    ["Misty's Golduck","GC","012"],["Misty's Gyarados","GC","013"],
+    ["Misty's Dewgong","GC","054"],["Misty's Magikarp","GC","075"],
+    ["Misty's Poliwag","GC","076"],["Misty's Poliwhirl","GC","077"],
+    ["Misty's Psyduck","GC","078"],["Misty's Seadra","GC","079"],
+    ["Misty's Staryu","GC","081"],["Misty's Tentacool","GC","082"],
+  ],
+  surge:[
+    ["Lt. Surge's Electabuzz","GH","006"],["Lt. Surge's Fearow","GH","007"],
+    ["Lt. Surge's Magneton","GH","008"],["Lt. Surge's Electabuzz","GH","027"],
+    ["Lt. Surge's Raichu","GH","028"],["Lt. Surge's Magnemite","GH","050"],
+    ["Lt. Surge's Raticate","GH","051"],["Lt. Surge's Spearow","GH","052"],
+    ["Lt. Surge's Magnemite","GH","080"],["Lt. Surge's Pikachu","GH","081"],
+    ["Lt. Surge's Rattata","GH","082"],["Lt. Surge's Spearow","GH","083"],
+    ["Lt. Surge's Voltorb","GH","084"],
+    ["Lt. Surge's Raichu","GC","011"],["Lt. Surge's Jolteon","GC","028"],
+    ["Lt. Surge's Eevee","GC","051"],["Lt. Surge's Electrode","GC","052"],
+    ["Lt. Surge's Raticate","GC","053"],["Lt. Surge's Pikachu","GC","084"],
+    ["Lt. Surge's Rattata","GC","085"],["Lt. Surge's Voltorb","GC","086"],
+  ],
+  erika:[
+    ["Erika's Clefable","GH","003"],["Erika's Dragonair","GH","004"],
+    ["Erika's Vileplume","GH","005"],["Erika's Clefairy","GH","025"],
+    ["Erika's Victreebel","GH","026"],["Erika's Dratini","GH","042"],
+    ["Erika's Exeggcute","GH","043"],["Erika's Exeggutor","GH","044"],
+    ["Erika's Gloom","GH","045"],["Erika's Gloom","GH","046"],
+    ["Erika's Oddish","GH","047"],["Erika's Weepinbell","GH","048"],
+    ["Erika's Weepinbell","GH","049"],["Erika's Bellsprout","GH","075"],
+    ["Erika's Bellsprout","GH","076"],["Erika's Exeggcute","GH","077"],
+    ["Erika's Oddish","GH","078"],
+    ["Erika's Venusaur","GC","004"],["Erika's Bellsprout","GC","038"],
+    ["Erika's Bulbasaur","GC","039"],["Erika's Clefairy","GC","040"],
+    ["Erika's Ivysaur","GC","041"],["Erika's Dratini","GC","072"],
+    ["Erika's Exeggcute","GC","073"],["Erika's Oddish","GC","074"],
+  ],
+  koga:[
+    ["Koga's Beedrill","GC","009"],["Koga's Ditto","GC","010"],
+    ["Koga's Arbok","GC","025"],["Koga's Muk","GC","026"],
+    ["Koga's Pidgeotto","GC","027"],["Koga's Golbat","GC","046"],
+    ["Koga's Kakuna","GC","047"],["Koga's Koffing","GC","048"],
+    ["Koga's Pidgey","GC","049"],["Koga's Weezing","GC","050"],
+    ["Koga's Grimer","GC","075"],["Koga's Pidgey","GC","080"],
+    ["Koga's Weedle","GC","090"],["Koga's Zubat","GC","091"],
+  ],
+  blaine:[
+    ["Blaine's Moltres","GH","001"],["Blaine's Magmar","GH","037"],
+    ["Blaine's Charmander","GH","061"],["Blaine's Growlithe","GH","062"],
+    ["Blaine's Ponyta","GH","063"],["Blaine's Tauros","GH","064"],
+    ["Blaine's Vulpix","GH","065"],
+    ["Blaine's Arcanine","GC","001"],["Blaine's Charizard","GC","002"],
+    ["Blaine's Ninetales","GC","021"],["Blaine's Charmeleon","GC","031"],
+    ["Blaine's Dodrio","GC","032"],["Blaine's Rapidash","GC","033"],
+    ["Blaine's Charmander","GC","060"],["Blaine's Doduo","GC","061"],
+    ["Blaine's Growlithe","GC","062"],["Blaine's Magmar","GC","064"],
+    ["Blaine's Ponyta","GC","082"],["Blaine's Tauros","GC","084"],
+  ],
+  giovanni:[
+    ["Giovanni's Gyarados","GC","005"],["Giovanni's Machamp","GC","006"],
+    ["Giovanni's Nidoking","GC","007"],["Giovanni's Persian","GC","008"],
+    ["Giovanni's Nidoqueen","GC","023"],["Giovanni's Pinsir","GC","024"],
+    ["Giovanni's Machoke","GC","042"],["Giovanni's Meowth","GC","043"],
+    ["Giovanni's Nidorina","GC","044"],["Giovanni's Nidorino","GC","045"],
+    ["Giovanni's Meowth","GC","074"],["Giovanni's Nidoran♀","GC","075"],
+    ["Giovanni's Nidoran♂","GC","076"],["Giovanni's Machop","GC","077"],
+    ["Giovanni's Magikarp","GC","078"],
+  ],
+  rocket:[
+    ["Rocket's Hitmonchan","GH","011"],["Rocket's Moltres","GH","012"],
+    ["Rocket's Scyther","GH","013"],["Rocket's Snorlax","GH","033"],
+    ["Rocket's Mewtwo","GC","014"],["Rocket's Zapdos","GC","015"],
+  ],
+};
+
+const imgCache = {};
+
+async function fetchImage(name, set, num) {
+  const key = `${set}-${num}`;
+  if (imgCache[key] !== undefined) return imgCache[key];
+  imgCache[key] = null; // mark as loading
+
+  const setFull = set === 'GH' ? 'Gym Heroes' : 'Gym Challenge';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: `Search for a direct image URL of the Pokemon card "${name}" from the ${setFull} TCG set, card number ${num}/132.
+Look for a card scan image (.jpg or .png) from sites like bulbapedia, serebii, cardmarket, tcgplayer, or similar.
+Return ONLY valid JSON: {"url":"https://example.com/image.jpg","src":"site name"}
+No markdown, no explanation.`
+        }]
+      })
+    });
+    const data = await res.json();
+    const fullText = (data.content || []).map(b => b.text || '').join('');
+    const match = fullText.match(/\{\s*"url"\s*:\s*"(https?[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"[^}]*\}/i);
+    if (match) {
+      imgCache[key] = match[1];
+      return match[1];
+    }
+  } catch(e) {}
+  imgCache[key] = '';
+  return '';
+}
+
+let activeTrainer = 'sabrina';
+let activeSet = 'all';
+
+function getFiltered(tid) {
+  return (CARDS[tid] || []).filter(c => activeSet === 'all' || c[1] === activeSet);
+}
+
+function renderTabs() {
+  document.getElementById('trainerRow').innerHTML = TRAINERS.map(t => {
+    const cnt = getFiltered(t.id).length;
+    return `<button class="trainer-btn ${activeTrainer===t.id?'active':''}" onclick="selectTrainer('${t.id}')">
+      ${t.icon} ${t.name} <span class="cnt">${cnt}</span>
+    </button>`;
+  }).join('');
+}
+
+function cardHTML(c, i) {
+  const [name, set, num] = c;
+  const key = `${set}-${num}`;
+  const setLabel = set === 'GH' ? 'GH' : 'GC';
+  const url = imgCache[key];
+  let inner = '';
+  if (url) {
+    inner = `<img src="${url}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=\\'placeholder\\'><div class=\\'ball\\'>⚪</div><div>${name}</div></div>'">`;
+  } else if (url === '') {
+    inner = `<div class="placeholder"><div class="ball">⚪</div></div>`;
+  } else {
+    inner = `<div class="spinner-wrap" id="sw-${key}"><div class="spinner"></div></div>`;
+  }
+  return `<div class="card-item" onclick="openModal(${i})" id="ci-${key}">
+    <div class="card-img-box" id="ib-${key}">${inner}</div>
+    <div class="card-label">
+      <div class="pname">${name}</div>
+      <div class="pmeta"><span class="pset">${setLabel}</span><span class="pnum">#${num}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderCards() {
+  const trainer = TRAINERS.find(t => t.id === activeTrainer);
+  const cards = getFiltered(activeTrainer);
+  document.getElementById('barTitle').textContent = trainer ? `${trainer.icon} ${trainer.name} (${trainer.jp})` : '';
+  document.getElementById('barCount').textContent = `${cards.length} ใบ`;
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!cards.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = cards.map((c, i) => cardHTML(c, i)).join('');
+
+  // Load images async
+  cards.forEach(async (c, i) => {
+    const [name, set, num] = c;
+    const key = `${set}-${num}`;
+    if (imgCache[key] !== undefined) return;
+    const url = await fetchImage(name, set, num);
+    const box = document.getElementById(`ib-${key}`);
+    if (!box) return;
+    if (url) {
+      box.innerHTML = `<img src="${url}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=\\'placeholder\\'><div class=\\'ball\\'>⚪</div></div>'">`;
+    } else {
+      box.innerHTML = `<div class="placeholder"><div class="ball">⚪</div></div>`;
+    }
+  });
+}
+
+function selectTrainer(id) {
+  activeTrainer = id;
+  renderTabs(); renderCards();
+}
+
+document.getElementById('setRow').addEventListener('click', e => {
+  const btn = e.target.closest('.set-btn');
+  if (!btn) return;
+  activeSet = btn.dataset.set;
+  document.querySelectorAll('.set-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTabs(); renderCards();
+});
+
+// Modal
+function openModal(i) {
+  const cards = getFiltered(activeTrainer);
+  const [name, set, num] = cards[i];
+  const key = `${set}-${num}`;
+  const setLabel = set === 'GH' ? 'Gym Heroes' : 'Gym Challenge';
+  document.getElementById('modalName').textContent = name;
+  document.getElementById('modalMeta').textContent = `${setLabel} · #${num}/132`;
+  document.getElementById('overlay').classList.add('open');
+  const box = document.getElementById('modalImgBox');
+  const url = imgCache[key];
+  if (url) {
+    box.innerHTML = `<img src="${url}" alt="${name}">`;
+    document.getElementById('sinfo').textContent = '✅ โหลดจาก cache';
+  } else {
+    box.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span>AI กำลังค้นหา...</span></div>`;
+    document.getElementById('sinfo').textContent = '🔍 ค้นหารูปจาก AI...';
+    fetchImage(name, set, num).then(url => {
+      const box2 = document.getElementById('modalImgBox');
+      if (!box2) return;
+      if (url) {
+        box2.innerHTML = `<img src="${url}" alt="${name}">`;
+        document.getElementById('sinfo').textContent = '✅ พบรูปแล้ว';
+        const gridBox = document.getElementById(`ib-${key}`);
+        if (gridBox) gridBox.innerHTML = `<img src="${url}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=\\'placeholder\\'><div class=\\'ball\\'>⚪</div></div>'">`;
+      } else {
+        box2.innerHTML = `<div class="placeholder"><div class="ball">⚪</div><div>ไม่พบรูปครับ</div></div>`;
+        document.getElementById('sinfo').textContent = '❌ ไม่พบรูปภาพ';
+      }
+    });
+  }
+}
+
+document.getElementById('modalClose').onclick = () => document.getElementById('overlay').classList.remove('open');
+document.getElementById('overlay').onclick = e => { if (e.target === document.getElementById('overlay')) document.getElementById('overlay').classList.remove('open'); };
+
+renderTabs();
+renderCards();
+</script>
+</body>
+</html>
